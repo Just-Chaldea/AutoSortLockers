@@ -3,80 +3,71 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
+using BepInEx;
+using BepInEx.Logging;
 using Common.Mod;
-using Harmony;
-using Oculus.Newtonsoft.Json;
+using HarmonyLib;
+using Nautilus.Handlers;
+using Newtonsoft.Json;
 using UnityEngine;
 
 namespace AutosortLockers
 {
-	internal static class Mod
+    [BepInPlugin(PluginInfo.PLUGIN_GUID, PluginInfo.PLUGIN_NAME, PluginInfo.PLUGIN_VERSION)]
+    [BepInDependency("com.snmodding.nautilus")]
+    public class Plugin : BaseUnityPlugin
 	{
 		public const string SaveDataFilename = "AutosortLockerSMLSaveData.json";
-		public static Config config;
-		public static SaveData saveData;
-		public static List<Color> colors = new List<Color>();
+        public new static ManualLogSource Logger { get; private set; }
 
-		private static string modDirectory;
+        private static Assembly Assembly { get; } = Assembly.GetExecutingAssembly();
+
+        public static Config config = new();
+		public static SaveData saveData;
+		public static List<Color> colors = new();
+
 		private static ModSaver saveObject;
 
 		public static event Action<SaveData> OnDataLoaded;
 
-		public static void Patch(string modDirectory = null)
-		{
-			Logger.Log("Starting patching");
+        private void Awake()
+        {
+            // set project-scoped logger instance
+            Logger = base.Logger;
 
-			Mod.modDirectory = modDirectory ?? "Subnautica_Data/Managed";
-			LoadConfig();
+            Plugin.config = OptionsPanelHandler.RegisterModOptions<Config>();
 
-			AddBuildables();
+			// Load colors
+            var serializedColors = JsonConvert.DeserializeObject<List<SerializableColor>>(File.ReadAllText(GetAssetPath("colors.json")));
+            foreach (var sColor in serializedColors)
+            {
+                colors.Add(sColor.ToColor());
+            }
 
-			HarmonyInstance harmony = HarmonyInstance.Create("com.AutosortLockersSML.mod");
-			harmony.PatchAll(Assembly.GetExecutingAssembly());
+            AddBuildables();
 
-			Logger.Log("Patched");
-		}
+            // register harmony patches, if there are any
+            Harmony.CreateAndPatchAll(Assembly);
+            Logger.LogInfo($"Plugin {PluginInfo.PLUGIN_GUID} is loaded!");
+        }
 
 		public static void AddBuildables()
 		{
 			AutosortLocker.AddBuildable();
 			AutosortTarget.AddBuildable();
-		}
+        }
 
-		public static string GetModPath()
-		{
-			return Environment.CurrentDirectory + "/" + modDirectory;
-		}
+        public static string GetAssetPath(string filename)
+        {
+            return Path.Combine(Path.Combine(GetModPath(), "Assets"), filename);
+        }
 
-		public static string GetAssetPath(string filename)
-		{
-			return GetModPath() + "/Assets/" + filename;
-		}
+        private static string GetModPath()
+        {
+            return Path.GetDirectoryName(Assembly.Location);
+        }
 
-		private static void LoadConfig()
-		{
-			config = ModUtils.LoadConfig<Config>(GetModPath() + "/config.json");
-			ValidateConfig();
-
-			var serializedColors = JsonConvert.DeserializeObject<List<SerializableColor>>(File.ReadAllText(GetAssetPath("colors.json")));
-			foreach (var sColor in serializedColors)
-			{
-				colors.Add(sColor.ToColor());
-			}
-		}
-
-		private static void ValidateConfig()
-		{
-			Config defaultConfig = new Config();
-
-			ModUtils.ValidateConfigValue("SortInterval", 0.1f, 10.0f, ref config, ref defaultConfig);
-			ModUtils.ValidateConfigValue("AutosorterWidth", 1, 8, ref config, ref defaultConfig);
-			ModUtils.ValidateConfigValue("AutosorterHeight", 1, 10, ref config, ref defaultConfig);
-			ModUtils.ValidateConfigValue("ReceptacleWidth", 1, 8, ref config, ref defaultConfig);
-			ModUtils.ValidateConfigValue("ReceptacleHeight", 1, 10, ref config, ref defaultConfig);
-		}
-
-		public static SaveData GetSaveData()
+        public static SaveData GetSaveData()
 		{
 			return saveData ?? new SaveData();
 		}
@@ -133,11 +124,11 @@ namespace AutosortLockers
 
 		public static void LoadSaveData()
 		{
-			Logger.Log("Loading Save Data...");
+			Logger.LogInfo("Loading Save Data...");
 			ModUtils.LoadSaveData<SaveData>(SaveDataFilename, (data) =>
 			{
 				saveData = data;
-				Logger.Log("Save Data Loaded");
+				Logger.LogInfo("Save Data Loaded");
 				OnDataLoaded?.Invoke(saveData);
 			});
 		}

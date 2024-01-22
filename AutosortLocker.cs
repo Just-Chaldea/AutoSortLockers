@@ -1,12 +1,16 @@
-﻿using System.Collections;
+﻿using Common.Mod;
+using Common.Utility;
+using Nautilus.Assets;
+using Nautilus.Assets.Gadgets;
+using Nautilus.Assets.PrefabTemplates;
+using Nautilus.Utility;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using Common.Mod;
-using Common.Utility;
-using SMLHelper.V2.Assets;
-using SMLHelper.V2.Crafting;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
+using static CraftData;
 
 namespace AutosortLockers
 {
@@ -29,9 +33,9 @@ namespace AutosortLockers
         [SerializeField]
         private Image icon;
         [SerializeField]
-        private Text text;
+        private TextMeshProUGUI text;
         [SerializeField]
-        private Text sortingText;
+        private TextMeshProUGUI sortingText;
         [SerializeField]
         private bool isSorting;
         [SerializeField]
@@ -88,8 +92,8 @@ namespace AutosortLockers
             text.gameObject.SetActive(true);
             sortingText.gameObject.SetActive(true);
 
-            background.sprite = ImageUtils.LoadSprite(Mod.GetAssetPath("LockerScreen.png"));
-            icon.sprite = ImageUtils.LoadSprite(Mod.GetAssetPath("Sorter.png"));
+            background.sprite = ImageUtilsCommon.LoadSprite(Plugin.GetAssetPath("LockerScreen.png"));
+            icon.sprite = ImageUtilsCommon.LoadSprite(Plugin.GetAssetPath("Sorter.png"));
 
             initialized = true;
         }
@@ -98,7 +102,7 @@ namespace AutosortLockers
         {
             while (true)
             {
-                yield return new WaitForSeconds(Mathf.Max(0, Mod.config.SortInterval - (unsortableItems / 60.0f)));
+                yield return new WaitForSeconds(Mathf.Max(0, Plugin.config.SortInterval - (unsortableItems / 60.0f)));
 
                 yield return Sort();
             }
@@ -289,87 +293,76 @@ namespace AutosortLockers
             return null;
         }
 
-        internal class AutosortLockerBuildable : Buildable
+        #region Prefab
+
+        public static void AddBuildable()
         {
-            public AutosortLockerBuildable()
-                : base("Autosorter",
-                      "Autosort Locker",
-                      "Small, wall-mounted smart-locker that automatically transfers items into linked Autosort Receptacles.")
+            var module = new CustomPrefab(PrefabInfo.WithTechType("Autosorter",
+                "Autosort Locker",
+                "Small, wall-mounted smart-locker that automatically transfers items into linked Autosort Receptacles.", unlockAtStart: true)
+                .WithIcon(ImageUtils.LoadSpriteFromFile(Plugin.GetAssetPath("AutosortLocker.png"))));
+
+            var template = new CloneTemplate(module.Info, TechType.SmallLocker)
             {
-            }
+                ModifyPrefab = ModifyPrefab
+            };
 
-            public override TechGroup GroupForPDA => TechGroup.InteriorModules;
-
-            public override TechCategory CategoryForPDA => TechCategory.InteriorModule;
-
-            public override GameObject GetGameObject()
+            module.SetGameObject(template);
+            module.SetPdaGroupCategory(TechGroup.InteriorModules, TechCategory.InteriorModule);
+            module.SetRecipe(new Nautilus.Crafting.RecipeData
             {
-                GameObject originalPrefab = CraftData.GetPrefabForTechType(TechType.SmallLocker);
-                GameObject prefab = GameObject.Instantiate(originalPrefab);
-
-                var container = prefab.GetComponent<StorageContainer>();
-                container.width = Mod.config.AutosorterWidth;
-                container.height = Mod.config.AutosorterHeight;
-                container.container.Resize(Mod.config.AutosorterWidth, Mod.config.AutosorterHeight);
-
-                var meshRenderers = prefab.GetComponentsInChildren<MeshRenderer>();
-                foreach (var meshRenderer in meshRenderers)
-                {
-                    meshRenderer.material.color = new Color(1, 0, 0);
-                }
-
-                var prefabText = prefab.GetComponentInChildren<Text>();
-                var label = prefab.FindChild("Label");
-                DestroyImmediate(label);
-
-                var autoSorter = prefab.AddComponent<AutosortLocker>();
-
-                var canvas = LockerPrefabShared.CreateCanvas(prefab.transform);
-                autoSorter.background = LockerPrefabShared.CreateBackground(canvas.transform);
-                autoSorter.icon = LockerPrefabShared.CreateIcon(autoSorter.background.transform, MainColor, 40);
-                autoSorter.text = LockerPrefabShared.CreateText(autoSorter.background.transform, prefabText, MainColor, 0, 14, "Autosorter");
-
-                autoSorter.sortingText = LockerPrefabShared.CreateText(autoSorter.background.transform, prefabText, MainColor, -120, 12, "Sorting...");
-                autoSorter.sortingText.alignment = TextAnchor.UpperCenter;
-
-                autoSorter.background.gameObject.SetActive(false);
-                autoSorter.icon.gameObject.SetActive(false);
-                autoSorter.text.gameObject.SetActive(false);
-                autoSorter.sortingText.gameObject.SetActive(false);
-
-                return prefab;
-            }
-
-            protected override TechData GetBlueprintRecipe()
-            {
-                return new TechData
-                {
-                    craftAmount = 1,
-                    Ingredients = Mod.config.EasyBuild
+                craftAmount = 1,
+                Ingredients = Plugin.config.EasyBuild
                     ? new List<Ingredient>
                     {
-                        new Ingredient(TechType.Titanium, 2)
+                        new(TechType.Titanium, 2)
                     }
                     : new List<Ingredient>
                     {
-                        new Ingredient(TechType.Titanium, 2),
-                        new Ingredient(TechType.ComputerChip, 1),
-                        new Ingredient(TechType.AluminumOxide, 2)
+                        new(TechType.Titanium, 2),
+                        new(TechType.ComputerChip, 1),
+                        new(TechType.AluminumOxide, 2)
                     }
-                };
-            }
-
-            protected override Atlas.Sprite GetItemSprite()
-            {
-                return SMLHelper.V2.Utility.ImageUtils.LoadSpriteFromFile(Mod.GetAssetPath("AutosortLocker.png"));
-            }
+            });
+            module.Register();
         }
 
-        ///////////////////////////////////////////////////////////////////////////////////////////
-        public static void AddBuildable()
+        private static void ModifyPrefab(GameObject prefab)
         {
-            var autosorter = new AutosortLockerBuildable();
-            autosorter.Patch();
+            var container = prefab.GetComponent<StorageContainer>();
+            container.width = Plugin.config.AutosorterWidth;
+            container.height = Plugin.config.AutosorterHeight;
+            container.container.Resize(Plugin.config.AutosorterWidth, Plugin.config.AutosorterHeight);
+
+            var meshRenderers = prefab.GetComponentsInChildren<MeshRenderer>();
+            foreach (var meshRenderer in meshRenderers)
+            {
+                meshRenderer.material.color = new Color(1, 0, 0);
+            }
+
+            var prefabText = prefab.GetComponentInChildren<TextMeshProUGUI>();
+
+            // NOTE: removing the locker label completely with DestroyImmediate will cause NullRefException in TriggerCull,
+            // so we workaround by making the label really small
+            var label = prefab.FindChild("Label");
+            label.transform.localScale = new Vector3(0.00001f, 0.00001f);
+
+            var autoSorter = prefab.AddComponent<AutosortLocker>();
+
+            var canvas = LockerPrefabShared.CreateCanvas(prefab.transform);
+            autoSorter.background = LockerPrefabShared.CreateBackground(canvas.transform);
+            autoSorter.icon = LockerPrefabShared.CreateIcon(autoSorter.background.transform, MainColor, 40);
+            autoSorter.text = LockerPrefabShared.CreateText(autoSorter.background.transform, prefabText, MainColor, 0, 14, "Autosorter");
+
+            autoSorter.sortingText = LockerPrefabShared.CreateText(autoSorter.background.transform, prefabText, MainColor, -120, 12, "Sorting...");
+            autoSorter.sortingText.alignment = TextAlignmentOptions.Top;
+
+            autoSorter.background.gameObject.SetActive(false);
+            autoSorter.icon.gameObject.SetActive(false);
+            autoSorter.text.gameObject.SetActive(false);
+            autoSorter.sortingText.gameObject.SetActive(false);
         }
+
+        #endregion Prefab
     }
 }

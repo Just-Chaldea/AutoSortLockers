@@ -44,11 +44,11 @@ namespace AutosortLockers
 
 			if (hoverSprite == null)
 			{
-				hoverSprite = ImageUtils.LoadSprite(Mod.GetAssetPath("SelectorHover.png"), new Vector2(0.5f, 0.5f));
+				hoverSprite = ImageUtilsCommon.LoadSprite(Plugin.GetAssetPath("SelectorHover.png"), new Vector2(0.5f, 0.5f));
 			}
 			if (selectedSprite == null)
 			{
-				selectedSprite = ImageUtils.LoadSprite(Mod.GetAssetPath("SelectorSelected.png"), new Vector2(0.5f, 0.5f));
+				selectedSprite = ImageUtilsCommon.LoadSprite(Plugin.GetAssetPath("SelectorSelected.png"), new Vector2(0.5f, 0.5f));
 			}
 
 			highlight.sprite = hoverSprite;
