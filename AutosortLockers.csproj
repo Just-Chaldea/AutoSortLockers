@@ -23,8 +23,11 @@
 		<PackageReference Include="BepInEx.PluginInfoProps" Version="1.1.0" />
 		<PackageReference Include="UnityEngine.Modules" Version="2019.4.36" IncludeAssets="compile" />
 		<PackageReference Include="Subnautica.GameLibs" Version="71288.0.0-r.0" />
-		<PackageReference Include="PolySharp" Version="1.13.1" />
-		<PackageReference Include="Subnautica.Nautilus" Version="1.*-*" PrivateAssets="all" />
+		<PackageReference Include="PolySharp" Version="1.14.1">
+		  <PrivateAssets>all</PrivateAssets>
+		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
+		<PackageReference Include="Subnautica.Nautilus" Version="1.0.0-pre.29" PrivateAssets="all" />
 	</ItemGroup>
 	<ItemGroup>
 	  <None Update="Assets\ArrowLeft.png">
