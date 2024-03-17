@@ -172,7 +172,7 @@ namespace AutosortLockers
 
 
         //////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        public static CustomizeScreen Create(Transform parent, TextMeshProUGUI textPrefab, SaveDataEntry data)
+        public static CustomizeScreen Create(Transform parent, SaveDataEntry data)
         {
             var screen = new GameObject("CustomizeScreen", typeof(RectTransform)).AddComponent<CustomizeScreen>();
             RectTransformExtensions.SetParams(screen.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), parent);
@@ -183,7 +183,7 @@ namespace AutosortLockers
             RectTransformExtensions.SetParams(screen.background.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), screen.transform);
             RectTransformExtensions.SetSize(screen.background.rectTransform, 114, 241);
 
-            screen.labelLabel = LockerPrefabShared.CreateText(screen.background.transform, textPrefab, ScreenContentColor, 100, 9, "Label:");
+            var textPrefab = screen.labelLabel = LockerPrefabShared.CreateText(screen.background.transform, ScreenContentColor, 100, 9, "Label:");
             RectTransformExtensions.SetSize(screen.labelLabel.rectTransform, 90, 40);
             screen.labelLabel.alignment = TextAlignmentOptions.MidlineLeft;
 

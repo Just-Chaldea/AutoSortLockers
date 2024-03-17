@@ -28,8 +28,6 @@ namespace AutosortLockers
         private SaveDataEntry saveData;
 
         [SerializeField]
-        private TextMeshProUGUI textPrefab;
-        [SerializeField]
         private Image background;
         [SerializeField]
         private Image icon;
@@ -375,7 +373,7 @@ namespace AutosortLockers
             UpdateText();
 
             CreatePicker();
-            CreateCustomizeScreen(textPrefab);
+            CreateCustomizeScreen();
 
             initialized = true;
         }
@@ -468,15 +466,15 @@ namespace AutosortLockers
 
         private void CreatePicker()
         {
-            SetPicker(AutosortTypePicker.Create(transform, textPrefab));
+            SetPicker(AutosortTypePicker.Create(transform));
             picker.transform.localPosition = background.canvas.transform.localPosition + new Vector3(0, 0, 0.04f);
             picker.Initialize(this);
             picker.gameObject.SetActive(false);
         }
 
-        private void CreateCustomizeScreen(TextMeshProUGUI textPrefab)
+        private void CreateCustomizeScreen()
         {
-            customizeScreen = CustomizeScreen.Create(background.transform, textPrefab, saveData);
+            customizeScreen = CustomizeScreen.Create(background.transform, saveData);
             customizeScreen.onModified += InitializeFromSaveData;
             customizeScreen.Initialize(saveData);
             customizeScreen.gameObject.SetActive(false);
@@ -546,7 +544,7 @@ namespace AutosortLockers
 
             var template = new CloneTemplate(module.Info, TechType.SmallLocker)
             {
-                ModifyPrefabAsync = ModifyAutosortTargetPrefabAsync
+                ModifyPrefab = ModifyAutosortTargetPrefab
             };
 
             module.SetGameObject(template);
@@ -581,7 +579,7 @@ namespace AutosortLockers
 
             var template = new CloneTemplate(module.Info, TechType.Locker)
             {
-                ModifyPrefabAsync = ModifyAutosortTargetStandingPrefabAsync
+                ModifyPrefab = ModifyAutosortTargetStandingPrefab
             };
 
             module.SetGameObject(template);
@@ -605,25 +603,25 @@ namespace AutosortLockers
             module.Register();
         }
 
-        private static IEnumerator ModifyAutosortTargetPrefabAsync(GameObject prefab)
+        private static void ModifyAutosortTargetPrefab(GameObject prefab)
         {
-            yield return ModifyPrefabAsync(prefab, false);
+            ModifyPrefab(prefab, false);
             StorageContainer container = prefab.GetComponent<StorageContainer>();
             container.width = Plugin.config.ReceptacleWidth;
             container.height = Plugin.config.ReceptacleHeight;
             container.container.Resize(Plugin.config.ReceptacleWidth, Plugin.config.ReceptacleHeight);
         }
 
-        private static IEnumerator ModifyAutosortTargetStandingPrefabAsync(GameObject prefab)
+        private static void ModifyAutosortTargetStandingPrefab(GameObject prefab)
         {
-            yield return ModifyPrefabAsync(prefab, true);
+            ModifyPrefab(prefab, true);
             var container = prefab.GetComponent<StorageContainer>();
             container.width = Plugin.config.StandingReceptacleWidth;
             container.height = Plugin.config.StandingReceptacleHeight;
             container.container.Resize(Plugin.config.StandingReceptacleWidth, Plugin.config.StandingReceptacleHeight);
         }
 
-        private static IEnumerator ModifyPrefabAsync(GameObject prefab, bool isLocker)
+        private static void ModifyPrefab(GameObject prefab, bool isLocker)
         {
             var meshRenderers = prefab.GetComponentsInChildren<MeshRenderer>();
             foreach (var meshRenderer in meshRenderers)
@@ -632,11 +630,6 @@ namespace AutosortLockers
             }
 
             var autosortTarget = prefab.AddComponent<AutosortTarget>();
-
-            var smallLockerPrefabTask = GetPrefabForTechTypeAsync(TechType.SmallLocker);
-            yield return smallLockerPrefabTask;
-            var smallLockerPrefab = smallLockerPrefabTask.GetResult();
-            var prefabText = autosortTarget.textPrefab = GameObject.Instantiate(smallLockerPrefab.GetComponentInChildren<TextMeshProUGUI>());
 
             // NOTE: removing the locker label completely with DestroyImmediate will cause NullRefException in TriggerCull,
             // so we workaround by making the label really small
@@ -652,26 +645,28 @@ namespace AutosortLockers
                 canvas.transform.localPosition = new Vector3(0, 1.1f, 0.25f);
             }
 
-            autosortTarget.background = LockerPrefabShared.CreateBackground(canvas.transform);
-            autosortTarget.icon = LockerPrefabShared.CreateIcon(autosortTarget.background.transform, prefabText.color, 70);
-            autosortTarget.text = LockerPrefabShared.CreateText(autosortTarget.background.transform, prefabText, prefabText.color, -20, 12, "Any");
+            var color = Color.white;
 
-            autosortTarget.label = LockerPrefabShared.CreateText(autosortTarget.background.transform, prefabText, prefabText.color, 100, 12, "Locker");
+            autosortTarget.background = LockerPrefabShared.CreateBackground(canvas.transform);
+            autosortTarget.icon = LockerPrefabShared.CreateIcon(autosortTarget.background.transform, color, 70);
+            autosortTarget.text = LockerPrefabShared.CreateText(autosortTarget.background.transform, color, -20, 12, "Any");
+
+            autosortTarget.label = LockerPrefabShared.CreateText(autosortTarget.background.transform, color, 100, 12, "Locker");
 
             autosortTarget.background.gameObject.SetActive(false);
             autosortTarget.icon.gameObject.SetActive(false);
             autosortTarget.text.gameObject.SetActive(false);
 
-            autosortTarget.plus = LockerPrefabShared.CreateText(autosortTarget.background.transform, prefabText, prefabText.color, 0, 30, "+");
-            autosortTarget.plus.color = new Color(prefabText.color.r, prefabText.color.g, prefabText.color.g, 0);
+            autosortTarget.plus = LockerPrefabShared.CreateText(autosortTarget.background.transform, color, 0, 30, "+");
+            autosortTarget.plus.color = new Color(color.r, color.g, color.b, 0);
             autosortTarget.plus.rectTransform.anchoredPosition += new Vector2(30, 70);
 
-            autosortTarget.quantityText = LockerPrefabShared.CreateText(autosortTarget.background.transform, prefabText, prefabText.color, 0, 10, "XX");
+            autosortTarget.quantityText = LockerPrefabShared.CreateText(autosortTarget.background.transform, color, 0, 10, "XX");
             autosortTarget.quantityText.rectTransform.anchoredPosition += new Vector2(-35, -104);
 
-            autosortTarget.configureButton = ConfigureButton.Create(autosortTarget.background.transform, prefabText.color, 40);
+            autosortTarget.configureButton = ConfigureButton.Create(autosortTarget.background.transform, color, 40);
             autosortTarget.configureButtonImage = autosortTarget.configureButton.GetComponent<Image>();
-            autosortTarget.customizeButton = ConfigureButton.Create(autosortTarget.background.transform, prefabText.color, 20);
+            autosortTarget.customizeButton = ConfigureButton.Create(autosortTarget.background.transform, color, 20);
             autosortTarget.customizeButtonImage = autosortTarget.customizeButton.GetComponent<Image>();
         }
 

@@ -103,7 +103,7 @@ namespace AutosortLockers
             if (textPrefab != null)
             {
                 var spacing = 5;
-                text = LockerPrefabShared.CreateText(rt, textPrefab, color, 0, 10, label);
+                text = LockerPrefabShared.CreateText(rt, color, 0, 10, label);
                 RectTransformExtensions.SetSize(text.rectTransform, width - 20 - spacing, 20);
                 text.rectTransform.anchoredPosition = new Vector2(10 + spacing, 0);
                 text.alignment = TextAlignmentOptions.MidlineLeft;

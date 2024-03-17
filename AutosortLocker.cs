@@ -352,9 +352,9 @@ namespace AutosortLockers
             var canvas = LockerPrefabShared.CreateCanvas(prefab.transform);
             autoSorter.background = LockerPrefabShared.CreateBackground(canvas.transform);
             autoSorter.icon = LockerPrefabShared.CreateIcon(autoSorter.background.transform, MainColor, 40);
-            autoSorter.text = LockerPrefabShared.CreateText(autoSorter.background.transform, prefabText, MainColor, 0, 14, "Autosorter");
+            autoSorter.text = LockerPrefabShared.CreateText(autoSorter.background.transform, MainColor, 0, 14, "Autosorter");
 
-            autoSorter.sortingText = LockerPrefabShared.CreateText(autoSorter.background.transform, prefabText, MainColor, -120, 12, "Sorting...");
+            autoSorter.sortingText = LockerPrefabShared.CreateText(autoSorter.background.transform, MainColor, -120, 12, "Sorting...");
             autoSorter.sortingText.alignment = TextAlignmentOptions.Top;
 
             autoSorter.background.gameObject.SetActive(false);

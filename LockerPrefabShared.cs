@@ -60,7 +60,7 @@ namespace Common.Mod
             return icon;
         }
 
-        internal static TextMeshProUGUI CreateText(Transform parent, TextMeshProUGUI prefab, Color color, int y, int size, string initial)
+        internal static TextMeshProUGUI CreateText(Transform parent, Color color, int y, int size, string initial)
         {
             var text = new GameObject("Text", typeof(RectTransform)).AddComponent<TextMeshProUGUI>();
             var rt = text.rectTransform;
@@ -68,7 +68,6 @@ namespace Common.Mod
             RectTransformExtensions.SetSize(rt, 120, 200);
             rt.anchoredPosition = new Vector2(0, y);
 
-            text.font = prefab.font;
             text.fontSize = size;
             text.color = color;
             text.alignment = TextAlignmentOptions.Midline;

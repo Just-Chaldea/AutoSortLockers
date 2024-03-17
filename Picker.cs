@@ -185,7 +185,7 @@ namespace AutosortLockers
             instance.background.type = Image.Type.Sliced;
             instance.background.rectTransform.anchoredPosition = new Vector2(0, -20);
 
-            instance.pageText = LockerPrefabShared.CreateText(instance.transform, textPrefab, Color.white, 0, 10, "X/X");
+            instance.pageText = LockerPrefabShared.CreateText(instance.transform, Color.white, 0, 10, "X/X");
             RectTransformExtensions.SetSize(instance.pageText.rectTransform, 30, 20);
 
             for (int i = 0; i < buttonCount; ++i)

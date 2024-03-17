@@ -168,7 +168,7 @@ namespace AutosortLockers
 
 
 
-        public static AutosortTypePicker Create(Transform parent, TextMeshProUGUI textPrefab)
+        public static AutosortTypePicker Create(Transform parent)
         {
             var picker = LockerPrefabShared.CreateCanvas(parent).gameObject.AddComponent<AutosortTypePicker>();
             picker.GetComponent<Canvas>().sortingLayerID = 0;
@@ -190,16 +190,16 @@ namespace AutosortLockers
             picker.underlines[0] = CreateUnderline(picker.background.transform, x);
             picker.underlines[1] = CreateUnderline(picker.background.transform, -x);
 
-            var currentText = LockerPrefabShared.CreateText(picker.background.transform, textPrefab, Color.white, 90, 12, "Current");
+            var currentText = LockerPrefabShared.CreateText(picker.background.transform, Color.white, 90, 12, "Current");
             currentText.rectTransform.anchoredPosition = new Vector2(-x, 90);
 
-            picker.categoriesTabButton = CreatePickerButton(picker.background.transform, x - 23 + 2, 90, textPrefab, picker.OnCategoriesButtonClick, 60);
+            picker.categoriesTabButton = CreatePickerButton(picker.background.transform, x - 23 + 2, 90, currentText, picker.OnCategoriesButtonClick, 60);
             picker.categoriesTabButton.Override("Categories", true);
 
-            picker.itemsTabButton = CreatePickerButton(picker.background.transform, x + 30 + 2, 90, textPrefab, picker.OnItemsButtonClick, 38);
+            picker.itemsTabButton = CreatePickerButton(picker.background.transform, x + 30 + 2, 90, currentText, picker.OnItemsButtonClick, 38);
             picker.itemsTabButton.Override("Items", false);
 
-            picker.pageText = LockerPrefabShared.CreateText(picker.background.transform, textPrefab, Color.white, 90, 10, "1/X");
+            picker.pageText = LockerPrefabShared.CreateText(picker.background.transform, Color.white, 90, 10, "1/X");
             picker.pageText.rectTransform.anchoredPosition = new Vector2(x, -80);
 
             picker.prevPageButton = AddPageButton(picker.background.transform, picker, -1, x - 20, -80);
@@ -209,8 +209,8 @@ namespace AutosortLockers
 
             for (int i = 0; i < AutosortTarget.MaxTypes; ++i)
             {
-                picker.currentList[i] = CreatePickerButton(picker.background.transform, -x, startY - (i * spacing), textPrefab, picker.OnCurrentListItemClick);
-                picker.availableList[i] = CreatePickerButton(picker.background.transform, x, startY - (i * spacing), textPrefab, picker.OnAvailableListItemClick);
+                picker.currentList[i] = CreatePickerButton(picker.background.transform, -x, startY - (i * spacing), currentText, picker.OnCurrentListItemClick);
+                picker.availableList[i] = CreatePickerButton(picker.background.transform, x, startY - (i * spacing), currentText, picker.OnAvailableListItemClick);
             }
 
             return picker;
